@@ -1,8 +1,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-
-// Ganti dengan URL Web App dari Google Apps Script kamu
-const ENDPOINT = import.meta.env.VITE_SHEETS_ENDPOINT
+import { supabase } from './lib/supabase'
+import { isValidIndonesianPhone } from './lib/phoneValidation'
 
 // Nilai bawaan sebelum content.md selesai di-fetch (juga fallback kalau file itu hilang)
 const content = reactive({
@@ -21,7 +20,6 @@ const content = reactive({
   venue: 'Pulse Powerhub',
   address: 'Jl. Pemelisan Agung, Pantai Berawa, Tibubeneng, Canggu, Bali',
   mapsLink: 'https://maps.google.com/?q=Pulse+Powerhub+Berawa+Canggu',
-  capacity: 150,
   tagline: 'Stronger together',
   instagramHandle: '@pulsepowerhub.bali',
   instagramLink: 'https://instagram.com/pulsepowerhub.bali',
@@ -29,15 +27,14 @@ const content = reactive({
   description: 'One year of fitness, wellness and community in Berawa.\nJoin us for an evening of movement, music, food and good company.'
 })
 
-const rsvpCount = ref(null)
+const stats = ref(null) // { quota, confirmed_count, waitlist_count }
 const spotsLeft = computed(() => {
-  if (rsvpCount.value === null) return null
-  return Math.max(0, Number(content.capacity) - rsvpCount.value)
+  if (!stats.value) return null
+  return Math.max(0, stats.value.quota - stats.value.confirmed_count)
 })
 const shared = ref(false)
 
 const rsvpOpen = ref(false)
-const rsvpStatus = ref('going') // going | maybe | cant
 
 const form = reactive({
   name: '',
@@ -46,11 +43,11 @@ const form = reactive({
   guests: '1',
   member: '',
   comment: '',
-  source: 'direct'
+  website: '' // honeypot — hidden from real visitors, see .hp-field below
 })
 
 const errors = reactive({})
-const status = ref('idle') // idle | sending | done | error
+const status = ref('idle') // idle | sending | done | waitlisted | already | error
 const errorMessage = ref('')
 const revealed = ref(false)
 
@@ -74,11 +71,9 @@ const calendarUrl = computed(() => {
 })
 
 onMounted(async () => {
-  const params = new URLSearchParams(window.location.search)
-  form.source = params.get('src') || 'direct'
   requestAnimationFrame(() => { revealed.value = true })
   await loadContent()
-  fetchSpots()
+  fetchStats()
 })
 
 /** Parser ringan untuk content.md: frontmatter `key: value` (+ list `- item`), lalu `---`, lalu deskripsi bebas */
@@ -123,18 +118,17 @@ async function loadContent () {
   }
 }
 
-async function fetchSpots () {
+async function fetchStats () {
   try {
-    const res = await fetch(ENDPOINT)
-    const data = await res.json()
-    if (typeof data.count === 'number') rsvpCount.value = data.count
+    const { data, error } = await supabase.rpc('get_event_stats')
+    if (error) throw error
+    stats.value = data
   } catch {
-    // badge falls back to "Limited spots" — not worth surfacing an error for this
+    // spots-row falls back to "Limited spots" — not worth surfacing an error for this
   }
 }
 
-function openRsvp (initialStatus) {
-  rsvpStatus.value = initialStatus
+function openRsvp () {
   rsvpOpen.value = true
 }
 
@@ -168,8 +162,7 @@ function validate () {
     errors.name = 'Enter your full name.'
   }
 
-  const digits = form.phone.replace(/\D/g, '')
-  if (digits.length < 8) {
+  if (!isValidIndonesianPhone(form.phone)) {
     errors.phone = 'Enter a valid WhatsApp number.'
   }
 
@@ -186,35 +179,37 @@ function validate () {
 
 async function submit () {
   if (status.value === 'sending') return
+
+  // Honeypot: real visitors never see or fill this field — bots that do get
+  // silently dropped, no error, no request sent.
+  if (form.website) return
+
   if (!validate()) return
 
   status.value = 'sending'
   errorMessage.value = ''
 
-  const payload = {
-    name: form.name.trim(),
-    phone: form.phone.trim(),
-    email: form.email.trim().toLowerCase(),
-    guests: Number(form.guests),
-    member: form.member,
-    status: rsvpStatus.value,
-    comment: form.comment.trim(),
-    source: form.source,
-    userAgent: navigator.userAgent
-  }
-
   try {
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      // text/plain menghindari CORS preflight — Apps Script tidak handle OPTIONS
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+    const { data, error } = await supabase.rpc('submit_registration', {
+      p_name: form.name.trim(),
+      p_phone: form.phone.trim(),
+      p_email: form.email.trim().toLowerCase(),
+      p_member: form.member,
+      p_guest_count: Number(form.guests),
+      p_notes: form.comment.trim() || null
     })
+    if (error) throw error
 
-    const data = await res.json()
-    if (data.status !== 'success') throw new Error(data.message || 'Save failed')
+    if (!data.success) {
+      if (data.error === 'already_registered') {
+        status.value = 'already'
+        return
+      }
+      throw new Error(data.error || 'Save failed')
+    }
 
-    status.value = 'done'
+    status.value = data.status === 'waitlist' ? 'waitlisted' : 'done'
+    fetchStats()
   } catch (err) {
     status.value = 'error'
     errorMessage.value = 'We could not save your RSVP. Check your connection and try again.'
@@ -229,15 +224,6 @@ function retry () {
 
 <template>
   <div class="page" :class="{ 'is-revealed': revealed }">
-
-    <div class="fx-layer" aria-hidden="true">
-      <span class="fx-item fx-teal" style="left:6%; animation-delay:0s; animation-duration:16s;"></span>
-      <span class="fx-item fx-purple" style="left:20%; animation-delay:5s; animation-duration:20s;"></span>
-      <span class="fx-item fx-pink" style="left:38%; animation-delay:11s; animation-duration:17s;"></span>
-      <span class="fx-item fx-orange" style="left:58%; animation-delay:2s; animation-duration:22s;"></span>
-      <span class="fx-item fx-teal" style="left:74%; animation-delay:8s; animation-duration:18s;"></span>
-      <span class="fx-item fx-purple" style="left:88%; animation-delay:14s; animation-duration:21s;"></span>
-    </div>
 
     <header class="hero">
       <p class="brand">{{ content.brand }}<span class="brand-sub">{{ content.brandSub }}</span></p>
@@ -275,7 +261,7 @@ function retry () {
         <p class="spots-row">
           <span class="detail-icon">👥</span>
           <span :class="{ 'is-low': spotsLeft !== null && spotsLeft <= 20 }">
-            {{ spotsLeft === null ? 'Limited spots' : spotsLeft <= 0 ? 'Fully booked' : `${spotsLeft}/${content.capacity} spots left` }}
+            {{ spotsLeft === null ? 'Limited spots' : spotsLeft <= 0 ? 'Fully booked — waitlist open' : `${spotsLeft}/${stats.quota} spots left` }}
           </span>
         </p>
 
@@ -301,27 +287,16 @@ function retry () {
 
     <div class="sticky-bar">
       <div class="pill-group">
-        <button type="button" class="pill-seg pill-seg-primary" @click="openRsvp('going')">🔥 RSVP</button>
-        <button type="button" class="pill-seg pill-seg-ghost" @click="openRsvp('maybe')">☆ Interested</button>
+        <button type="button" class="pill-seg pill-seg-primary" @click="openRsvp">
+          {{ spotsLeft !== null && spotsLeft <= 0 ? '📝 Join Waitlist' : '🔥 RSVP' }}
+        </button>
       </div>
     </div>
 
     <div v-if="rsvpOpen" class="modal-overlay" @click.self="closeRsvp">
       <div class="modal-sheet" role="dialog" aria-modal="true" aria-label="RSVP">
 
-        <template v-if="status !== 'done'">
-          <div class="status-row">
-            <button type="button" class="status-btn status-going" :class="{ active: rsvpStatus === 'going' }" @click="rsvpStatus = 'going'">
-              <span class="status-emoji">👍</span><span>Going</span>
-            </button>
-            <button type="button" class="status-btn status-maybe" :class="{ active: rsvpStatus === 'maybe' }" @click="rsvpStatus = 'maybe'">
-              <span class="status-emoji">🤔</span><span>Maybe</span>
-            </button>
-            <button type="button" class="status-btn status-cant" :class="{ active: rsvpStatus === 'cant' }" @click="rsvpStatus = 'cant'">
-              <span class="status-emoji">😰</span><span>Can't Go</span>
-            </button>
-          </div>
-
+        <template v-if="status === 'idle' || status === 'sending' || status === 'error'">
           <div class="uline-field">
             <input v-model="form.name" type="text" placeholder="Your Name" autocomplete="name"
                    :aria-invalid="!!errors.name" @input="delete errors.name">
@@ -362,6 +337,16 @@ function retry () {
             <input v-model="form.comment" type="text" placeholder="+ Post a comment">
           </div>
 
+          <!-- Honeypot: hidden from real visitors via CSS, tabindex/autocomplete
+               discourage autofill. Any bot that fills it gets silently dropped
+               in submit() — see .hp-field below. -->
+          <div class="hp-field" aria-hidden="true">
+            <label>
+              Company
+              <input v-model="form.website" type="text" tabindex="-1" autocomplete="off">
+            </label>
+          </div>
+
           <p v-if="status === 'error'" class="err err-block">
             {{ errorMessage }}
             <button class="link" type="button" @click="retry">Try again</button>
@@ -375,7 +360,7 @@ function retry () {
           </div>
         </template>
 
-        <template v-else>
+        <template v-else-if="status === 'done'">
           <h2 class="panel-head">You're on the list</h2>
           <p class="panel-note">
             See you on {{ content.dateFull }} at {{ content.time }}.
@@ -391,49 +376,32 @@ function retry () {
           </div>
         </template>
 
+        <template v-else-if="status === 'waitlisted'">
+          <h2 class="panel-head">You're on the waitlist</h2>
+          <p class="panel-note">
+            Spots are full for {{ content.dateFull }}, but you're on the waitlist —
+            we'll reach out on WhatsApp if a spot opens up.
+          </p>
+          <div class="modal-footer modal-footer-single">
+            <button type="button" class="btn-continue" @click="closeRsvp">Got it</button>
+          </div>
+        </template>
+
+        <template v-else-if="status === 'already'">
+          <h2 class="panel-head">You're already registered</h2>
+          <p class="panel-note">
+            This WhatsApp number is already on our list for {{ content.dateFull }}. See you there!
+          </p>
+          <div class="modal-footer modal-footer-single">
+            <button type="button" class="btn-continue" @click="closeRsvp">Close</button>
+          </div>
+        </template>
+
       </div>
     </div>
 
   </div>
 </template>
-
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,700;0,800;1,700&family=Inter:ital,wght@0,400;0,500;0,600;1,600&display=swap');
-/* Lausanne (Swiss Typefaces) itu font berbayar — General Sans dipakai sebagai pengganti gratis yang gaya-nya dekat, khusus untuk teks deskripsi */
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap');
-
-:root {
-  --ink: #0a0b0c;
-  --paper: #ffffff;
-  --pulse: #4fdde5;
-  --pulse-dim: #1e5f65;
-  --muted: #8b9295;
-  --danger: #ff6b5e;
-}
-
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  background: var(--ink);
-}
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  color: var(--paper);
-  -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(at 15% 0%, rgba(90, 140, 255, .35), transparent 55%),
-    radial-gradient(at 85% 8%, rgba(190, 110, 255, .3), transparent 55%),
-    radial-gradient(at 10% 55%, rgba(255, 130, 190, .22), transparent 55%),
-    radial-gradient(at 90% 60%, rgba(255, 160, 110, .28), transparent 55%),
-    radial-gradient(at 50% 100%, rgba(79, 221, 229, .18), transparent 60%),
-    var(--ink);
-  background-attachment: fixed;
-}
-
-#app { min-height: 100vh; }
-</style>
 
 <style scoped>
 .page {
@@ -456,41 +424,6 @@ body {
   .hero, .lineup {
     opacity: 1; transform: none; transition: none;
   }
-}
-
-/* --- floating overlay effect --- */
-.fx-layer {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 5;
-}
-.fx-item {
-  position: absolute;
-  bottom: -8%;
-  width: .4rem;
-  height: .4rem;
-  border-radius: 50%;
-  opacity: 0;
-  animation-name: fx-float;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-  will-change: transform, opacity;
-}
-.fx-teal   { background: var(--pulse); box-shadow: 0 0 14px 3px rgba(79, 221, 229, .55); }
-.fx-purple { width: .5rem; height: .5rem; background: #be6eff; box-shadow: 0 0 16px 3px rgba(190, 110, 255, .5); }
-.fx-pink   { width: .3rem; height: .3rem; background: #ff8fc2; box-shadow: 0 0 12px 3px rgba(255, 143, 194, .5); }
-.fx-orange { width: .35rem; height: .35rem; background: #ffaa6b; box-shadow: 0 0 12px 3px rgba(255, 170, 107, .5); }
-@keyframes fx-float {
-  0%   { transform: translateY(0) translateX(0); opacity: 0; }
-  12%  { opacity: .7; }
-  50%  { transform: translateY(-55vh) translateX(2.5vw); opacity: .7; }
-  88%  { opacity: .7; }
-  100% { transform: translateY(-115vh) translateX(-3vw); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fx-layer { display: none; }
 }
 
 /* --- hero --- */
@@ -786,42 +719,6 @@ body {
   line-height: 1.5;
 }
 
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  gap: .7rem;
-  margin: 0 0 1.8rem;
-}
-.status-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .5rem;
-  background: none;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  padding: .7rem .3rem;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: .8rem;
-  font-weight: 600;
-}
-.status-emoji {
-  width: 3.1rem;
-  height: 3.1rem;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 1.4rem;
-  background: #1c2224;
-}
-.status-going .status-emoji { background: radial-gradient(circle at 30% 30%, #8fd3ff, #4f6bff); }
-.status-maybe .status-emoji { background: radial-gradient(circle at 30% 30%, #ffd88f, #ff9a4f); }
-.status-cant .status-emoji { background: radial-gradient(circle at 30% 30%, #ffa3c4, #ff4f8b); }
-.status-btn.active { border-color: var(--pulse); color: var(--paper); }
-.status-btn:hover { color: var(--paper); }
-
 .uline-field { margin: 0 0 1.2rem; }
 .uline-field input {
   width: 100%;
@@ -865,6 +762,15 @@ body {
   padding: .6rem 0;
 }
 .uline-select:focus { outline: none; border-color: var(--pulse); }
+
+/* Honeypot — off-screen, not display:none (some bots skip hidden fields). */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
 
 .modal-footer {
   display: flex;
@@ -996,17 +902,6 @@ body {
   white-space: nowrap;
   cursor: pointer;
 }
-.pill-seg-primary { position: relative; }
-.pill-seg-primary::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 1px;
-  background: #dcdcdc;
-}
-.pill-seg-ghost { color: #55595a; }
 .pill-seg:active { background: rgba(0, 0, 0, .06); }
 
 @media (max-width: 30rem) {

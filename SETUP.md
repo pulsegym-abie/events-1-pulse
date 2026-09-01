@@ -1,54 +1,42 @@
 # Pulse Powerhub RSVP — Setup
 
-## 1. Install Vue 3
+## 1. Install dependencies
 
 ```bash
-npm create vite@latest pulse-rsvp -- --template vue
-cd pulse-rsvp
 npm install
 ```
 
-Tidak ada dependency tambahan. Form pakai `fetch` bawaan browser.
+## 2. Supabase
 
-Lalu timpa file hasil scaffold dengan file dari sini:
+1. Buat project Supabase (atau pakai yang sudah ada — lihat `supabase.md`).
+2. Buka `SQL Editor` di dashboard Supabase, paste isi
+   `supabase/migrations/001_init_registrations.sql`, lalu Run.
+   - Ini bikin tabel `registrations` + `event_settings` (quota default 150),
+     function `submit_registration` (anti-dobel-submit + quota, atomic) dan
+     `get_event_stats`.
+   - Aman dijalankan ulang (`if not exists` / `on conflict do nothing`).
+3. Ambil `Project URL` dan `anon public key` dari `Settings > API`.
 
-```
-pulse-rsvp/
-├── index.html          ← ganti
-├── src/
-│   ├── App.vue         ← ganti
-│   └── main.js         ← ganti
-├── Code.gs             ← ini untuk Apps Script, bukan bagian build
-└── .env.local          ← buat sendiri dari .env.example
-```
+## 3. Environment variables
 
-Hapus `src/components/HelloWorld.vue` dan `src/style.css` bawaan Vite.
-
-## 2. Google Sheets
-
-1. Buat Sheet baru, rename tab pertama jadi **RSVP**
-2. `Extensions > Apps Script`, hapus isinya, paste `Code.gs`
-3. Jalankan fungsi `setupSheet` sekali (klik Run, izinkan permission)
-4. `Deploy > New deployment > Web app`
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-5. Copy URL yang berakhiran `/exec`
-
-Tes dulu: buka URL `/exec` di browser. Harus muncul `{"status":"ok",...}`.
-
-## 3. Hubungkan frontend
-
-Buat file `.env.local`:
+Buat `.env.local` dari `.env.example`:
 
 ```
-VITE_SHEETS_ENDPOINT=https://script.google.com/macros/s/XXXX/exec
+VITE_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=xxxxxxxxxxxx
+VITE_ADMIN_PASSWORD=pilih-password-sendiri
 ```
+
+`VITE_ADMIN_PASSWORD` cuma password sederhana untuk buka `/admin` (lihat
+jumlah confirmed vs waitlist) — bukan auth yang secure, tapi cukup untuk
+kebutuhan ini karena `get_event_stats` memang sudah anon-executable.
 
 ```bash
 npm run dev
 ```
 
-Submit form, cek Sheet — baris harus masuk.
+Isi form RSVP, cek tabel `registrations` di Supabase — baris harus masuk.
+Buka `/admin`, masukkan password, lihat angka confirmed/waitlist/quota.
 
 ## 4. Deploy ke Vercel
 
@@ -59,31 +47,30 @@ vercel
 
 Atau push ke GitHub lalu import di dashboard Vercel (auto-detect Vite).
 
-**Penting:** tambahkan `VITE_SHEETS_ENDPOINT` di Vercel
-`Settings > Environment Variables`, lalu redeploy. Variabel di `.env.local`
-tidak ikut ter-upload.
+**Penting:** tambahkan `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, dan
+`VITE_ADMIN_PASSWORD` di Vercel `Settings > Environment Variables`, lalu
+redeploy — variabel di `.env.local` tidak ikut ter-upload.
+
+`vercel.json` sudah menangani SPA fallback (`/admin` tidak 404 saat direfresh).
 
 ## 5. Custom domain
 
-Di Vercel `Settings > Domains`, tambahkan `app.pulsepowerhub.com`.
-Vercel kasih CNAME, masukkan ke DNS. Tunggu propagasi, pastikan
-`https://` sudah hijau sebelum submit template ke Meta.
+Di Vercel `Settings > Domains`, tambahkan domain event. Vercel kasih CNAME,
+masukkan ke DNS. Tunggu propagasi, pastikan `https://` sudah hijau sebelum
+broadcast link ke WhatsApp.
 
-## 6. Tracking channel
+## 6. Konten & kuota
 
-Karena pakai Static URL di template WhatsApp, tracking per-member tidak ada.
-Tapi kamu tetap bisa tahu channel mana yang jalan, dengan query param:
+- Deskripsi acara, cover, lineup, dll diedit lewat `public/content.md`
+  (langsung refresh, tidak perlu rebuild).
+- Kuota kursi (150) diatur di kolom `event_settings.quota` di Supabase —
+  **bukan** di `content.md`. Ubah lewat SQL Editor kalau perlu:
+  `update event_settings set quota = 200 where id = 1;`
 
-- Tombol WhatsApp → `https://app.pulsepowerhub.com/?src=wa`
-- Link di email   → `https://app.pulsepowerhub.com/?src=email`
-- Bio Instagram   → `https://app.pulsepowerhub.com/?src=ig`
+## Yang perlu dicek sebelum broadcast
 
-Nilainya otomatis masuk kolom **Source** di Sheet.
-
-## Yang perlu dicek sebelum blast
-
-- [ ] Jam event: flyer bilang 5–8 PM, template WA bilang "until late" — samakan
-- [ ] Domain: pitch deck pakai pulsepowerhub.id, template pakai app.pulsepowerhub.com
-- [ ] Kapasitas: target deck 150 guests, blast ke 600 kontak — siapkan cutoff
-- [ ] Halaman sudah live sebelum submit template (reviewer Meta membukanya)
-- [ ] Taruh `og.jpg` (1200×630, crop dari flyer) di folder `public/`
+- [ ] Jalankan migration di project Supabase yang benar (production, bukan test)
+- [ ] `VITE_ADMIN_PASSWORD` sudah diset di Vercel (bukan cuma di `.env.local`)
+- [ ] Halaman sudah live di domain final sebelum link dibroadcast
+- [ ] Tes submit 1x nomor asli, cek masuk sebagai `confirmed` di `/admin`
+- [ ] Tes submit nomor yang sama lagi → harus dapat pesan "already registered"

@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,700;0,800;1,700&family=Inter:ital,wght@0,400;0,500;0,600;1,600&display=swap');
+/* Lausanne (Swiss Typefaces) itu font berbayar — General Sans dipakai sebagai pengganti gratis yang gaya-nya dekat, khusus untuk teks deskripsi */
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap');
+
+:root {
+  --ink: #0a0b0c;
+  --paper: #ffffff;
+  --pulse: #4fdde5;
+  --pulse-dim: #1e5f65;
+  --muted: #8b9295;
+  --danger: #ff6b5e;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--ink);
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(at 15% 0%, rgba(90, 140, 255, .35), transparent 55%),
+    radial-gradient(at 85% 8%, rgba(190, 110, 255, .3), transparent 55%),
+    radial-gradient(at 10% 55%, rgba(255, 130, 190, .22), transparent 55%),
+    radial-gradient(at 90% 60%, rgba(255, 160, 110, .28), transparent 55%),
+    radial-gradient(at 50% 100%, rgba(79, 221, 229, .18), transparent 60%),
+    var(--ink);
+  background-attachment: fixed;
+}
+
+#app { min-height: 100vh; }

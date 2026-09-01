@@ -1,6 +1,7 @@
 <!-- Edit nilai di bawah ini, simpan, lalu refresh halaman — tidak perlu build ulang. -->
 <!-- Format: `key: value` satu baris. Untuk daftar (lineup), kosongkan value lalu isi baris "  - item" di bawahnya. -->
 <!-- Semua teks setelah baris "---" di paling bawah adalah deskripsi acara (boleh 1 baris atau lebih). -->
+<!-- Kuota (150) dan sisa slot TIDAK diatur di sini — itu di tabel event_settings di Supabase. -->
 
 brand: PULSE
 brand_sub: POWERHUB
@@ -17,7 +18,6 @@ host_initials: PP
 venue: Pulse Powerhub
 address: Jl. Pemelisan Agung, Pantai Berawa, Tibubeneng, Canggu, Bali
 maps_link: https://maps.google.com/?q=Pulse+Powerhub+Berawa+Canggu
-capacity: 150
 tagline: Stronger together
 instagram_handle: @pulsepowerhub.bali
 instagram_link: https://instagram.com/pulsepowerhub.bali
