@@ -232,7 +232,7 @@ function retry () {
       <div class="flyer-block">
         <img class="cover" :src="content.coverImage" :alt="content.coverAlt">
         <div class="flyer-actions">
-          <button type="button" class="flyer-rsvp-btn" @click="openRsvp">
+          <button type="button" class="rsvp-btn" @click="openRsvp">
             {{ spotsLeft !== null && spotsLeft <= 0 ? '📝 Join Waitlist' : '🔥 RSVP' }}
           </button>
         </div>
@@ -292,7 +292,7 @@ function retry () {
 
     <div class="sticky-bar">
       <div class="pill-group">
-        <button type="button" class="pill-seg pill-seg-primary" @click="openRsvp">
+        <button type="button" class="rsvp-btn" @click="openRsvp">
           {{ spotsLeft !== null && spotsLeft <= 0 ? '📝 Join Waitlist' : '🔥 RSVP' }}
         </button>
       </div>
@@ -489,21 +489,6 @@ function retry () {
   margin: 0 0 1.8rem;
   box-shadow: 0 0 40px rgba(79, 221, 229, .12);
 }
-
-.flyer-rsvp-btn {
-  width: 100%;
-  background: var(--pulse);
-  color: #000;
-  border: 0;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: .96rem;
-  padding: .9rem 1.2rem;
-  cursor: pointer;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
-  transition: filter .15s ease;
-}
-.flyer-rsvp-btn:hover { filter: brightness(1.08); }
 
 /* --- intro block --- */
 .event-date {
@@ -891,32 +876,35 @@ function retry () {
 }
 .pill-group {
   pointer-events: auto;
-  display: flex;
-  align-items: stretch;
-  background: var(--paper);
-  border-radius: 999px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .5);
-  overflow: hidden;
+  width: 100%;
+  max-width: 26rem;
 }
-.pill-seg {
+
+/* Shared RSVP button look — the sticky mobile bar and the desktop flyer
+   sidebar both use it, so it always reads as the one action that matters. */
+.rsvp-btn {
   display: flex;
   align-items: center;
-  gap: .45rem;
-  padding: 1rem 1.7rem;
+  justify-content: center;
+  width: 100%;
+  padding: 1.15rem 1.5rem;
+  border-radius: 999px;
   font-family: inherit;
   font-weight: 700;
-  font-size: .96rem;
-  color: #0a0b0c;
-  background: none;
-  border: 0;
-  text-decoration: none;
+  font-size: 1.05rem;
   white-space: nowrap;
   cursor: pointer;
+  background: var(--pulse);
+  color: #000;
+  border: 0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  transition: filter .15s ease;
 }
-.pill-seg:active { background: rgba(0, 0, 0, .06); }
+.rsvp-btn:hover { filter: brightness(1.08); }
+.rsvp-btn:active { filter: brightness(0.95); }
 
 @media (max-width: 30rem) {
   .page { padding: 2rem 1.15rem 7rem; }
-  .pill-seg { padding: .95rem 1.3rem; }
+  .rsvp-btn { padding: 1.05rem 1.3rem; }
 }
 </style>
