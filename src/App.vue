@@ -1,7 +1,8 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { supabase } from './lib/supabase'
-import { isValidIndonesianPhone } from './lib/phoneValidation'
+import { isValidPhoneNumber } from './lib/phoneValidation'
+import CountryCodeSelect from './components/CountryCodeSelect.vue'
 
 // Nilai bawaan sebelum content.md selesai di-fetch (juga fallback kalau file itu hilang)
 const content = reactive({
@@ -38,10 +39,9 @@ const rsvpOpen = ref(false)
 
 const form = reactive({
   name: '',
-  phone: '',
+  phoneDial: '', // country dial code, e.g. "+62" — left blank, most guests aren't Indonesian
+  phone: '', // national number, without the dial code
   email: '',
-  guests: '1',
-  member: '',
   comment: '',
   website: '' // honeypot — hidden from real visitors, see .hp-field below
 })
@@ -162,16 +162,14 @@ function validate () {
     errors.name = 'Enter your full name.'
   }
 
-  if (!isValidIndonesianPhone(form.phone)) {
+  if (!form.phoneDial) {
+    errors.phone = 'Select your country code.'
+  } else if (!isValidPhoneNumber(form.phone)) {
     errors.phone = 'Enter a valid WhatsApp number.'
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
     errors.email = 'Enter a valid email address.'
-  }
-
-  if (!form.member) {
-    errors.member = 'Pick one.'
   }
 
   return Object.keys(errors).length === 0
@@ -192,10 +190,8 @@ async function submit () {
   try {
     const { data, error } = await supabase.rpc('submit_registration', {
       p_name: form.name.trim(),
-      p_phone: form.phone.trim(),
+      p_phone: form.phoneDial + form.phone.trim(),
       p_email: form.email.trim().toLowerCase(),
-      p_member: form.member,
-      p_guest_count: Number(form.guests),
       p_notes: form.comment.trim() || null
     })
     if (error) throw error
@@ -304,7 +300,7 @@ function retry () {
           <p v-if="errors.name" class="err">{{ errors.name }}</p>
 
           <div class="uline-field phone-field">
-            <span class="cc">🇮🇩 +62</span>
+            <CountryCodeSelect v-model="form.phoneDial" />
             <input v-model="form.phone" type="tel" inputmode="tel" placeholder="Phone number" autocomplete="tel"
                    :aria-invalid="!!errors.phone" @input="delete errors.phone">
           </div>
@@ -316,22 +312,6 @@ function retry () {
                    :aria-invalid="!!errors.email" @input="delete errors.email">
           </div>
           <p v-if="errors.email" class="err">{{ errors.email }}</p>
-
-          <div class="uline-row">
-            <select v-model="form.guests" class="uline-select">
-              <option value="1">1 attendee</option>
-              <option value="2">2 attendees</option>
-              <option value="3">3 attendees</option>
-              <option value="4">4 attendees</option>
-            </select>
-            <select v-model="form.member" class="uline-select"
-                    :aria-invalid="!!errors.member" @change="delete errors.member">
-              <option value="" disabled>Pulse member?</option>
-              <option value="yes">Member</option>
-              <option value="no">Not yet</option>
-            </select>
-          </div>
-          <p v-if="errors.member" class="err">{{ errors.member }}</p>
 
           <div class="uline-field">
             <input v-model="form.comment" type="text" placeholder="+ Post a comment">
@@ -737,31 +717,12 @@ function retry () {
 .phone-field {
   display: flex;
   align-items: center;
-  gap: .6rem;
+  gap: .3rem;
   border-bottom: 1px solid #2a3132;
 }
-.phone-field .cc { font-size: .95rem; flex-shrink: 0; }
 .phone-field input { border-bottom: 0; flex: 1; }
 
 .hint { margin: -.85rem 0 1.2rem; font-size: .78rem; color: var(--muted); }
-
-.uline-row {
-  display: flex;
-  gap: 1.2rem;
-  margin: 0 0 1.2rem;
-}
-.uline-select {
-  flex: 1;
-  min-width: 0;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid #2a3132;
-  color: var(--paper);
-  font: inherit;
-  font-size: .95rem;
-  padding: .6rem 0;
-}
-.uline-select:focus { outline: none; border-color: var(--pulse); }
 
 /* Honeypot — off-screen, not display:none (some bots skip hidden fields). */
 .hp-field {
