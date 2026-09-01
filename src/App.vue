@@ -370,7 +370,7 @@ function retry () {
         <template v-else-if="status === 'already'">
           <h2 class="panel-head">You're already registered</h2>
           <p class="panel-note">
-            This WhatsApp number is already on our list for {{ content.dateFull }}. See you there!
+            This phone number or email is already on our list for {{ content.dateFull }}. See you there!
           </p>
           <div class="modal-footer modal-footer-single">
             <button type="button" class="btn-continue" @click="closeRsvp">Close</button>
