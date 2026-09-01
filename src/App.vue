@@ -222,12 +222,21 @@ function retry () {
   <div class="page" :class="{ 'is-revealed': revealed }">
 
     <header class="hero">
-      <p class="brand">{{ content.brand }}<span class="brand-sub">{{ content.brandSub }}</span></p>
+      <div class="title-block">
+        <p class="brand">{{ content.brand }}<span class="brand-sub">{{ content.brandSub }}</span></p>
 
-      <span class="event-badge">{{ content.badge }}</span>
-      <h1 class="event-title">{{ content.title }}</h1>
+        <span class="event-badge">{{ content.badge }}</span>
+        <h1 class="event-title">{{ content.title }}</h1>
+      </div>
 
-      <img class="cover" :src="content.coverImage" :alt="content.coverAlt">
+      <div class="flyer-block">
+        <img class="cover" :src="content.coverImage" :alt="content.coverAlt">
+        <div class="flyer-actions">
+          <button type="button" class="flyer-rsvp-btn" @click="openRsvp">
+            {{ spotsLeft !== null && spotsLeft <= 0 ? '📝 Join Waitlist' : '🔥 RSVP' }}
+          </button>
+        </div>
+      </div>
 
       <div class="intro">
         <p class="event-date">{{ content.dateShort }}</p>
@@ -388,7 +397,10 @@ function retry () {
   max-width: 46rem;
   margin: 0 auto;
   padding: 2.4rem 1.5rem 6.5rem;
-  overflow-x: clip;
+}
+
+@media (min-width: 60rem) {
+  .page { max-width: 68rem; padding-bottom: 4rem; }
 }
 
 /* one orchestrated entrance, nothing else moves on its own */
@@ -406,7 +418,26 @@ function retry () {
   }
 }
 
-/* --- hero --- */
+/* --- hero: single column on mobile; Partiful-style 2-col + sticky flyer on desktop --- */
+.title-block { grid-area: title; }
+.flyer-block { grid-area: flyer; }
+.intro { grid-area: intro; }
+.flyer-actions { display: none; }
+
+@media (min-width: 60rem) {
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 24rem;
+    grid-template-areas:
+      "title flyer"
+      "intro flyer";
+    column-gap: 3.5rem;
+    align-items: start;
+  }
+  .flyer-block { position: sticky; top: 2.4rem; }
+  .flyer-actions { display: block; margin-top: 1.2rem; }
+}
+
 .brand {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
@@ -448,7 +479,7 @@ function retry () {
   color: transparent;
 }
 
-/* --- cover photo --- */
+/* --- cover photo + flyer actions (Partiful-style sticky sidebar on desktop) --- */
 .cover {
   display: block;
   width: 100%;
@@ -458,6 +489,21 @@ function retry () {
   margin: 0 0 1.8rem;
   box-shadow: 0 0 40px rgba(79, 221, 229, .12);
 }
+
+.flyer-rsvp-btn {
+  width: 100%;
+  background: var(--pulse);
+  color: #000;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .96rem;
+  padding: .9rem 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  transition: filter .15s ease;
+}
+.flyer-rsvp-btn:hover { filter: brightness(1.08); }
 
 /* --- intro block --- */
 .event-date {
@@ -838,6 +884,10 @@ function retry () {
   justify-content: center;
   padding: 0 1.2rem calc(1.1rem + env(safe-area-inset-bottom));
   pointer-events: none;
+}
+@media (min-width: 60rem) {
+  /* RSVP lives inline under the flyer image on desktop instead. */
+  .sticky-bar { display: none; }
 }
 .pill-group {
   pointer-events: auto;
