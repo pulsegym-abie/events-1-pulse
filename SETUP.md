@@ -9,12 +9,22 @@ npm install
 ## 2. Supabase
 
 1. Buat project Supabase (atau pakai yang sudah ada — lihat `supabase.md`).
-2. Buka `SQL Editor` di dashboard Supabase, paste isi
-   `supabase/migrations/001_init_registrations.sql`, lalu Run.
-   - Ini bikin tabel `registrations` + `event_settings` (quota default 150),
-     function `submit_registration` (anti-dobel-submit + quota, atomic) dan
-     `get_event_stats`.
-   - Aman dijalankan ulang (`if not exists` / `on conflict do nothing`).
+2. Buka `SQL Editor` di dashboard Supabase, jalankan migration di
+   `supabase/migrations/` **berurutan** (001, 002, 003):
+   - `001_init_registrations.sql` — tabel `registrations` + `event_settings`
+     (quota default 150), function `submit_registration` (anti-dobel-submit +
+     quota, atomic) dan `get_event_stats`.
+   - `002_normalize_phone_international.sql` — perbaikan normalisasi nomor
+     untuk tamu internasional (bukan cuma nomor Indonesia).
+   - `003_admin_registrations_list.sql` — tabel `admin_config` + function
+     `get_registrations` (list registrant untuk `/admin`, dicek password
+     server-side). Setelah run, isi passwordnya (samakan dengan
+     `VITE_ADMIN_PASSWORD`):
+     ```sql
+     insert into admin_config (id, password) values (1, 'password-yang-sama-dengan-VITE_ADMIN_PASSWORD')
+     on conflict (id) do update set password = excluded.password;
+     ```
+   - Semua migration aman dijalankan ulang (`if not exists` / `create or replace`).
 3. Ambil `Project URL` dan `anon public key` dari `Settings > API`.
 
 ## 3. Environment variables
@@ -36,7 +46,9 @@ npm run dev
 ```
 
 Isi form RSVP, cek tabel `registrations` di Supabase — baris harus masuk.
-Buka `/admin`, masukkan password, lihat angka confirmed/waitlist/quota.
+Buka `/admin`, masukkan password, lihat angka confirmed/waitlist/quota plus
+daftar registrant (nama/telp/email) — bisa di-export CSV (buka langsung di
+Excel) atau Print/PDF.
 
 ## 4. Deploy ke Vercel
 
