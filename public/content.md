@@ -9,10 +9,10 @@ badge: 🌐 Public Event
 title: PULSE 1st Anniversary
 cover_image: /cover.jpg
 cover_alt: PULSE Powerhub 1st Anniversary — join the celebration
-date_short: Wednesday, Sep 9
-date_full: September 9, 2026
+date_short: Wednesday, Sep 24
+date_full: September 24, 2026
 time: 5:00 PM – 8:00 PM
-start_iso: 2026-09-09T17:00:00+08:00
+start_iso: 2026-09-24T17:00:00+08:00
 host_name: Pulse Powerhub
 host_initials: PP
 venue: Pulse Powerhub
