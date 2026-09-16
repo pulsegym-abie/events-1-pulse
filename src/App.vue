@@ -24,7 +24,7 @@ const content = reactive({
   tagline: 'Stronger together',
   instagramHandle: '@pulsepowerhub.bali',
   instagramLink: 'https://instagram.com/pulsepowerhub.bali',
-  lineup: ['Fitness challenge', 'Floating pilates', 'Recovery & sauna', 'DJ set', 'Food & drinks', 'Prizes', 'Bazaar', 'Tarot booth', 'IV drip booth'],
+  lineup: ['Fitness challenge', 'Recovery & sauna', 'DJ set', 'Food & drinks', 'Prizes', 'Bazaar', 'Tarot booth', 'IV drip booth'],
   description: 'One year of fitness, wellness and community in Berawa.\nJoin us for an evening of movement, music, food and good company.'
 })
 

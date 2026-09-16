@@ -23,7 +23,6 @@ instagram_handle: @pulsepowerhub.bali
 instagram_link: https://instagram.com/pulsepowerhub.bali
 lineup:
   - Fitness challenge
-  - Floating pilates
   - Recovery & sauna
   - DJ set
   - Food & drinks
