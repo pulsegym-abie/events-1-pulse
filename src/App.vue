@@ -268,13 +268,6 @@ function retry () {
           </span>
         </a>
 
-        <p class="spots-row">
-          <span class="detail-icon">👥</span>
-          <span :class="{ 'is-low': spotsLeft !== null && spotsLeft <= 20 }">
-            {{ spotsLeft === null ? 'Limited spots' : spotsLeft <= 0 ? 'Fully booked — waitlist open' : `${spotsLeft}/${stats.quota} spots left` }}
-          </span>
-        </p>
-
         <p class="tagline">{{ content.tagline }}</p>
 
         <p class="lede">{{ content.description }}</p>
@@ -448,7 +441,7 @@ function retry () {
 /* --- hero: single column on mobile; Partiful-style 2-col + sticky flyer on desktop --- */
 .title-block { grid-area: title; }
 .flyer-block { grid-area: flyer; }
-.intro { grid-area: intro; }
+.intro { grid-area: intro; text-align: center; }
 .flyer-actions { display: none; }
 
 @media (min-width: 60rem) {
@@ -463,6 +456,12 @@ function retry () {
   }
   .flyer-block { position: sticky; top: 2.4rem; }
   .flyer-actions { display: block; margin-top: 1.2rem; }
+
+  /* Centered intro reads better stacked on mobile; back to left-aligned
+     once it sits beside the flyer image on desktop. */
+  .intro { text-align: left; }
+  .quick-actions, .host-row, .location-block { justify-content: flex-start; }
+  .lede { margin-left: 0; margin-right: 0; }
 }
 
 .brand {
@@ -518,6 +517,9 @@ function retry () {
 }
 
 /* --- intro block --- */
+/* Centering lives on the .intro rule up top (with grid-area) so it comes
+   before the min-width: 60rem override in source order — otherwise the
+   media query would lose the cascade to this later, unconditional rule. */
 .event-date {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
@@ -527,13 +529,14 @@ function retry () {
 }
 .event-time {
   margin: .3rem 0 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--muted);
 }
 
 .quick-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .7rem;
   margin: 1.2rem 0 0;
 }
@@ -573,6 +576,7 @@ function retry () {
 .host-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .65rem;
   margin: 0;
 }
@@ -602,13 +606,15 @@ function retry () {
 }
 .host-line {
   margin: 0;
-  font-size: .96rem;
+  font-size: 1.02rem;
   font-weight: 600;
   color: var(--paper);
 }
 
 .location-block {
   display: flex;
+  justify-content: center;
+  text-align: center;
   gap: .7rem;
   margin: 1.5rem 0 0;
   color: inherit;
@@ -618,23 +624,13 @@ function retry () {
   display: block;
   color: var(--paper);
   font-weight: 600;
-  font-size: .96rem;
+  font-size: 1.02rem;
 }
 .location-block .addr {
   color: var(--muted);
-  font-size: .86rem;
+  font-size: .9rem;
 }
 .location-block:hover strong { color: var(--pulse); }
-
-.spots-row {
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  margin: 1.1rem 0 0;
-  font-size: .95rem;
-  color: #d4d9da;
-}
-.spots-row .is-low { color: var(--danger); font-weight: 600; }
 
 .detail-icon {
   width: 1.4rem;
@@ -654,7 +650,7 @@ function retry () {
 .tagline {
   font-weight: 600;
   font-style: italic;
-  font-size: 1rem;
+  font-size: 1.06rem;
   letter-spacing: .1em;
   color: var(--pulse);
   margin: .5rem 0 0;
@@ -664,10 +660,10 @@ function retry () {
   font-family: 'General Sans', 'Inter', sans-serif;
   font-weight: 400;
   max-width: 34ch;
-  font-size: 1.02rem;
+  font-size: 1.08rem;
   line-height: 1.55;
   color: #d4d9da;
-  margin: 1.3rem 0 0;
+  margin: 1.3rem auto 0;
   white-space: pre-line;
 }
 
@@ -714,7 +710,7 @@ function retry () {
   border: 1px solid #262b2c;
   border-radius: 999px;
   padding: .42rem .85rem;
-  font-size: .88rem;
+  font-size: .93rem;
   color: #c3c9ca;
 }
 
@@ -888,19 +884,19 @@ function retry () {
 }
 .info-label {
   margin: 0 0 .35rem;
-  font-size: .78rem;
+  font-size: .82rem;
   letter-spacing: .04em;
   color: var(--muted);
 }
 .info-value {
   margin: 0;
-  font-size: .98rem;
+  font-size: 1.04rem;
   font-weight: 600;
   color: var(--paper);
 }
 .info-note {
   margin: .35rem 0 0;
-  font-size: .84rem;
+  font-size: .88rem;
   color: var(--muted);
   line-height: 1.5;
 }
@@ -972,18 +968,27 @@ function retry () {
   padding: 1.15rem 1.5rem;
   border-radius: 999px;
   font-family: inherit;
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: 800;
+  font-size: 1.2rem;
   white-space: nowrap;
   cursor: pointer;
   background: var(--pulse);
   color: #000;
   border: 0;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 0 22px rgba(79, 221, 229, .45), 0 0 44px rgba(79, 221, 229, .2);
   transition: filter .15s ease;
+  animation: rsvp-glow 2.4s ease-in-out infinite;
 }
 .rsvp-btn:hover { filter: brightness(1.08); }
 .rsvp-btn:active { filter: brightness(0.95); }
+
+@keyframes rsvp-glow {
+  0%, 100% { box-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 0 18px rgba(79, 221, 229, .4), 0 0 38px rgba(79, 221, 229, .18); }
+  50%      { box-shadow: 0 12px 32px rgba(0, 0, 0, .45), 0 0 30px rgba(79, 221, 229, .75), 0 0 60px rgba(79, 221, 229, .35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-btn { animation: none; }
+}
 
 @media (max-width: 30rem) {
   .page { padding: 2rem 1.15rem 7rem; }
