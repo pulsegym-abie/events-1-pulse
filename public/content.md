@@ -7,7 +7,7 @@ brand: PULSE
 brand_sub: POWERHUB
 badge: 🌐 Public Event
 title: PULSE POWERHUB TURNS 1 ⚡️
-cover_image: /cover.png
+cover_image: /cover.jpg
 cover_alt: PULSE Powerhub Turns 1 — full event poster with schedule, lineup and sponsors
 date_short: Thursday, Sep 24
 date_full: September 24, 2026
@@ -33,12 +33,18 @@ morning_special_time: 9 AM
 morning_special_title: Yoga Class with Nicolas Wilmy
 morning_special_note: Limited spots available. Contact PULSE to reserve your spot.
 sponsors:
-  - Alma Women Center|/sponsors/alma-women-center.jpg
-  - Nikara Spa|/sponsors/nikara-spa.jpg
-  - Bali Daylight|/sponsors/bali-daylight.jpg
-  - Yung Dii|/sponsors/yung-dii.jpg
+  - Kembali Berawa|/sponsors/kembali-berawa.png
+  - 1C+ Tenplus|/sponsors/1c-tenplus.png
   - AVA DJ School|/sponsors/ava-dj-school.jpg
-  - Toko Sri Sedana|/sponsors/toko-sri-sedana.jpg
+  - Greenok|/sponsors/greenok.png
+  - Bumi|/sponsors/bumi.png
+  - LSV Lesva|/sponsors/lsv-lesva.png
+  - Yung Dii|/sponsors/yung-dii.jpg
+  - Bali Daylight|/sponsors/bali-daylight.jpg
+  - M Lounge|/sponsors/m-monogram.png
+  - Nikara Spa|/sponsors/nikara-spa.jpg
+  - Alma Women Center|/sponsors/alma-women-center.jpg
+  - Sri Sedana Supplier|/sponsors/sri-sedana.png
 ---
 Come celebrate our 1st Anniversary with us. Join us for an evening of good energy, music and community as we celebrate one incredible year of PULSE.
 

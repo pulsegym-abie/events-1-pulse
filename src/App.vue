@@ -10,7 +10,7 @@ const content = reactive({
   brandSub: 'POWERHUB',
   badge: '🌐 Public Event',
   title: 'PULSE POWERHUB TURNS 1 ⚡️',
-  coverImage: '/cover.png',
+  coverImage: '/cover.jpg',
   coverAlt: 'PULSE Powerhub Turns 1 — full event poster with schedule, lineup and sponsors',
   dateShort: 'Wednesday, Sep 9',
   dateFull: 'September 9, 2026',
