@@ -24,6 +24,14 @@ npm install
      insert into admin_config (id, password) values (1, 'password-yang-sama-dengan-VITE_ADMIN_PASSWORD')
      on conflict (id) do update set password = excluded.password;
      ```
+   - `004_email_anti_duplicate.sql` — tambah unique check di email, bukan
+     cuma nomor telepon.
+   - `006_manual_admin_approval.sql` — submit RSVP sekarang masuk sebagai
+     `pending` (bukan langsung `confirmed`), admin approve/decline manual
+     satu-satu dari `/admin` (function `approve_registration`,
+     `decline_registration`, `get_admin_stats`). Kuota tetap dipotong atomic
+     saat submit (sama seperti sebelumnya) — approve/decline cuma lapisan
+     verifikasi di atasnya, bukan penentu kuota.
    - Semua migration aman dijalankan ulang (`if not exists` / `create or replace`).
 3. Ambil `Project URL` dan `anon public key` dari `Settings > API`.
 
@@ -84,5 +92,7 @@ broadcast link ke WhatsApp.
 - [ ] Jalankan migration di project Supabase yang benar (production, bukan test)
 - [ ] `VITE_ADMIN_PASSWORD` sudah diset di Vercel (bukan cuma di `.env.local`)
 - [ ] Halaman sudah live di domain final sebelum link dibroadcast
-- [ ] Tes submit 1x nomor asli, cek masuk sebagai `confirmed` di `/admin`
+- [ ] Tes submit 1x nomor asli, cek masuk sebagai `pending` di `/admin`
 - [ ] Tes submit nomor yang sama lagi → harus dapat pesan "already registered"
+- [ ] Tes tombol Confirm/Decline di `/admin`, pastikan `confirmed_count` tetap
+      benar di kedua kasus (Confirm tidak mengubah, Decline mengurangi 1)

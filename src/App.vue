@@ -61,7 +61,7 @@ const form = reactive({
 })
 
 const errors = reactive({})
-const status = ref('idle') // idle | sending | done | waitlisted | already | error
+const status = ref('idle') // idle | sending | pending | waitlisted | already | error
 const errorMessage = ref('')
 const revealed = ref(false)
 
@@ -218,7 +218,7 @@ async function submit () {
       throw new Error(data.error || 'Save failed')
     }
 
-    status.value = data.status === 'waitlist' ? 'waitlisted' : 'done'
+    status.value = data.status === 'waitlist' ? 'waitlisted' : 'pending'
     fetchStats()
   } catch (err) {
     status.value = 'error'
@@ -387,11 +387,11 @@ function retry () {
           </div>
         </template>
 
-        <template v-else-if="status === 'done'">
-          <h2 class="panel-head">You're on the list</h2>
+        <template v-else-if="status === 'pending'">
+          <h2 class="panel-head">You're in — just reviewing</h2>
           <p class="panel-note">
-            See you on {{ content.dateFull }} at {{ content.time }}.
-            We'll send the details to {{ form.email }}.
+            Thanks for RSVPing to {{ content.dateFull }}. We're reviewing your
+            spot and will confirm you on WhatsApp shortly.
           </p>
           <a class="cta cta-link" :href="calendarUrl" target="_blank" rel="noopener">
             Add to Google Calendar
@@ -399,7 +399,7 @@ function retry () {
           <a class="link link-block" :href="content.mapsLink"
              target="_blank" rel="noopener">Open in Maps</a>
           <div class="modal-footer modal-footer-single">
-            <button type="button" class="btn-continue" @click="closeRsvp">Done</button>
+            <button type="button" class="btn-continue" @click="closeRsvp">Got it</button>
           </div>
         </template>
 

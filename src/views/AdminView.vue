@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { supabase } from '../lib/supabase'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
@@ -12,6 +12,8 @@ const stats = ref(null)
 const registrations = ref([])
 const loading = ref(false)
 const loadError = ref('')
+const busy = reactive({}) // { [registrationId]: 'approving' | 'declining' }
+const actionError = ref('')
 
 function unlock() {
   if (!ADMIN_PASSWORD) {
@@ -32,7 +34,7 @@ async function refresh() {
   loadError.value = ''
   try {
     const [statsRes, regRes] = await Promise.all([
-      supabase.rpc('get_event_stats'),
+      supabase.rpc('get_admin_stats', { p_password: ADMIN_PASSWORD }),
       supabase.rpc('get_registrations', { p_password: ADMIN_PASSWORD })
     ])
     if (statsRes.error) throw statsRes.error
@@ -46,6 +48,44 @@ async function refresh() {
   } finally {
     loading.value = false
   }
+}
+
+async function approveReg(id) {
+  if (busy[id]) return
+  busy[id] = 'approving'
+  actionError.value = ''
+  try {
+    const { data, error } = await supabase.rpc('approve_registration', { p_password: ADMIN_PASSWORD, p_id: id })
+    if (error) throw error
+    if (!data.success) throw new Error(data.error || 'approve_failed')
+    await refresh()
+  } catch (err) {
+    actionError.value = 'Could not approve that RSVP. Try again.'
+  } finally {
+    delete busy[id]
+  }
+}
+
+async function declineReg(id) {
+  if (busy[id]) return
+  if (!confirm('Decline this RSVP? This frees their seat for someone else.')) return
+  busy[id] = 'declining'
+  actionError.value = ''
+  try {
+    const { data, error } = await supabase.rpc('decline_registration', { p_password: ADMIN_PASSWORD, p_id: id })
+    if (error) throw error
+    if (!data.success) throw new Error(data.error || 'decline_failed')
+    await refresh()
+  } catch (err) {
+    actionError.value = 'Could not decline that RSVP. Try again.'
+  } finally {
+    delete busy[id]
+  }
+}
+
+function waLink(r) {
+  const msg = `Hi ${r.name}, thanks for your RSVP — following up about your spot at Pulse Powerhub!`
+  return `https://wa.me/${r.phone_normalized}?text=${encodeURIComponent(msg)}`
 }
 
 function exportCsv() {
@@ -111,10 +151,15 @@ function exportPdf() {
       </div>
 
       <p v-if="loadError" class="err">{{ loadError }}</p>
+      <p v-if="actionError" class="err">{{ actionError }}</p>
 
       <div v-if="stats" class="stat-grid">
         <div class="stat-card">
-          <span class="stat-num">{{ stats.confirmed_count }}</span>
+          <span class="stat-num">{{ stats.pending_count }}</span>
+          <span class="stat-label">Pending review</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">{{ stats.approved_count }}</span>
           <span class="stat-label">Confirmed</span>
         </div>
         <div class="stat-card">
@@ -123,7 +168,7 @@ function exportPdf() {
         </div>
         <div class="stat-card">
           <span class="stat-num">{{ stats.quota }}</span>
-          <span class="stat-label">Quota</span>
+          <span class="stat-label">Quota ({{ stats.reserved_count }} reserved)</span>
         </div>
       </div>
 
@@ -139,6 +184,7 @@ function exportPdf() {
               <th>Status</th>
               <th>Notes</th>
               <th>Submitted</th>
+              <th class="actions">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -150,6 +196,22 @@ function exportPdf() {
               <td><span class="badge" :class="r.status">{{ r.status }}</span></td>
               <td>{{ r.notes || '—' }}</td>
               <td>{{ new Date(r.created_at).toLocaleString() }}</td>
+              <td class="actions">
+                <template v-if="r.status === 'pending'">
+                  <button type="button" class="btn-mini btn-approve" :disabled="!!busy[r.id]" @click="approveReg(r.id)">
+                    {{ busy[r.id] === 'approving' ? '…' : 'Confirm' }}
+                  </button>
+                  <button type="button" class="btn-mini btn-decline" :disabled="!!busy[r.id]" @click="declineReg(r.id)">
+                    {{ busy[r.id] === 'declining' ? '…' : 'Decline' }}
+                  </button>
+                </template>
+                <button v-else-if="r.status === 'confirmed'" type="button" class="btn-mini btn-decline"
+                        :disabled="!!busy[r.id]" @click="declineReg(r.id)">
+                  {{ busy[r.id] === 'declining' ? '…' : 'Revoke' }}
+                </button>
+                <span v-else class="muted">—</span>
+                <a v-if="r.phone_normalized" class="btn-mini btn-wa" :href="waLink(r)" target="_blank" rel="noopener">WA</a>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -247,9 +309,12 @@ h1 {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: .8rem;
   margin-bottom: 2.2rem;
+}
+@media (min-width: 30rem) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .stat-card {
   display: flex;
@@ -313,6 +378,30 @@ h1 {
 }
 .badge.confirmed { background: rgba(79, 221, 229, .15); color: var(--pulse); }
 .badge.waitlist { background: rgba(255, 170, 107, .15); color: #ffaa6b; }
+.badge.pending { background: rgba(255, 209, 102, .15); color: #ffd166; }
+.badge.declined { background: rgba(255, 107, 107, .15); color: var(--danger); }
+
+.actions { display: flex; gap: .4rem; }
+.btn-mini {
+  display: inline-block;
+  border-radius: 8px;
+  border: 1px solid #2a3132;
+  background: none;
+  color: var(--paper);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .35rem .6rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-mini:hover:not(:disabled) { filter: brightness(1.15); }
+.btn-mini:disabled { opacity: .45; cursor: default; }
+.btn-approve { border-color: var(--pulse); color: var(--pulse); }
+.btn-decline { border-color: var(--danger); color: var(--danger); }
+.btn-wa { border-color: #25D366; color: #25D366; }
+.muted { color: var(--muted); }
 
 .empty {
   padding: 1.4rem;
@@ -322,7 +411,7 @@ h1 {
 }
 
 @media print {
-  .gate, .dash-actions, .stat-grid { display: none; }
+  .gate, .dash-actions, .stat-grid, .actions { display: none; }
   .admin { padding: 0; background: #fff; color: #000; }
   .dashboard { max-width: none; }
   .reg-table { color: #000; }
