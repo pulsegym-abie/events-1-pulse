@@ -30,17 +30,8 @@ const content = reactive({
   morningSpecialTime: '',
   morningSpecialTitle: '',
   morningSpecialNote: '',
-  // Setiap item "Nama|/path/logo.jpg" — format sederhana ini dipakai supaya sponsor
-  // tetap bisa diedit lewat content.md tanpa perlu ubah parser (masih list biasa).
-  sponsors: []
+  sponsorsImage: ''
 })
-
-const sponsorList = computed(() => content.sponsors
-  .map(entry => {
-    const [name, logo] = entry.split('|')
-    return { name: (name || '').trim(), logo: (logo || '').trim() }
-  })
-  .filter(s => s.name && s.logo))
 
 const stats = ref(null) // { quota, confirmed_count, waitlist_count }
 const spotsLeft = computed(() => {
@@ -314,13 +305,11 @@ function retry () {
       </div>
     </section>
 
-    <section v-if="sponsorList.length" class="sponsors-section" aria-label="Supported by">
+    <section v-if="content.sponsorsImage" class="sponsors-section" aria-label="Supported by">
       <h2 class="section-head">Supported by</h2>
-      <ul class="sponsor-grid">
-        <li v-for="s in sponsorList" :key="s.name" class="sponsor-tile">
-          <img :src="s.logo" :alt="s.name" loading="lazy">
-        </li>
-      </ul>
+      <div class="sponsors-strip">
+        <img :src="content.sponsorsImage" alt="Supported by our event partners" loading="lazy">
+      </div>
     </section>
 
     <footer class="foot">
@@ -918,36 +907,22 @@ function retry () {
 
 /* --- supported by / sponsors --- */
 .sponsors-section { margin: 3rem 0 0; }
-.sponsor-grid {
-  list-style: none;
-  margin: 0;
-  padding: .2rem .1rem 1rem;
-  display: flex;
-  gap: .8rem;
+.sponsors-strip {
   overflow-x: auto;
-  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-}
-.sponsor-grid::-webkit-scrollbar { height: 5px; }
-.sponsor-grid::-webkit-scrollbar-track { background: transparent; }
-.sponsor-grid::-webkit-scrollbar-thumb { background: #262b2c; border-radius: 999px; }
-.sponsor-tile {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 9.5rem;
-  height: 5.5rem;
   border-radius: 14px;
   border: 1px solid #262b2c;
   background: linear-gradient(160deg, #1c2021 0%, #0a0b0c 100%);
-  padding: 1rem;
+  padding: 1.1rem 1rem;
 }
-.sponsor-tile img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+.sponsors-strip::-webkit-scrollbar { height: 5px; }
+.sponsors-strip::-webkit-scrollbar-track { background: transparent; }
+.sponsors-strip::-webkit-scrollbar-thumb { background: #262b2c; border-radius: 999px; }
+.sponsors-strip img {
+  display: block;
+  height: 5rem;
+  width: auto;
+  max-width: none;
 }
 
 /* --- footer --- */

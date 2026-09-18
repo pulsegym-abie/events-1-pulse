@@ -32,19 +32,7 @@ dress_code: Casual Sporty / Activewear
 morning_special_time: 9 AM
 morning_special_title: Yoga Class with Nicolas Wilmy
 morning_special_note: Limited spots available. Contact PULSE to reserve your spot.
-sponsors:
-  - Kembali Berawa|/sponsors/kembali-berawa.png
-  - 1C+ Tenplus|/sponsors/1c-tenplus.png
-  - AVA DJ School|/sponsors/ava-dj-school.jpg
-  - Greenok|/sponsors/greenok.png
-  - Bumi|/sponsors/bumi.png
-  - LSV Lesva|/sponsors/lsv-lesva.png
-  - Yung Dii|/sponsors/yung-dii.jpg
-  - Bali Daylight|/sponsors/bali-daylight.jpg
-  - Marvie Beauty|/sponsors/m-monogram.png
-  - Nikara Spa|/sponsors/nikara-spa.jpg
-  - Alma Women Center|/sponsors/alma-women-center.jpg
-  - Sri Sedana Supplier|/sponsors/sri-sedana.png
+sponsors_image: /sponsors/supported-by-strip.png
 ---
 Come celebrate our 1st Anniversary with us. Join us for an evening of good energy, music and community as we celebrate one incredible year of PULSE.
 
