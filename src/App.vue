@@ -9,9 +9,9 @@ const content = reactive({
   brand: 'PULSE',
   brandSub: 'POWERHUB',
   badge: '🌐 Public Event',
-  title: 'PULSE 1st Anniversary',
-  coverImage: '/cover.jpg',
-  coverAlt: 'PULSE Powerhub 1st Anniversary — join the celebration',
+  title: 'PULSE POWERHUB TURNS 1 ⚡️',
+  coverImage: '/cover.png',
+  coverAlt: 'PULSE Powerhub Turns 1 — full event poster with schedule, lineup and sponsors',
   dateShort: 'Wednesday, Sep 9',
   dateFull: 'September 9, 2026',
   time: '5:00 PM – 8:00 PM',
@@ -521,7 +521,7 @@ function retry () {
 .cover {
   display: block;
   width: 100%;
-  aspect-ratio: 1000 / 524;
+  aspect-ratio: 1024 / 1536;
   object-fit: cover;
   border-radius: 20px;
   margin: 0 0 1.8rem;

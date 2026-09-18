@@ -6,9 +6,9 @@
 brand: PULSE
 brand_sub: POWERHUB
 badge: 🌐 Public Event
-title: Turns 1 ⚡️
-cover_image: /cover.jpg
-cover_alt: PULSE Powerhub 1st Anniversary — join the celebration
+title: PULSE POWERHUB TURNS 1 ⚡️
+cover_image: /cover.png
+cover_alt: PULSE Powerhub Turns 1 — full event poster with schedule, lineup and sponsors
 date_short: Thursday, Sep 24
 date_full: September 24, 2026
 time: 5:00 PM – 8:00 PM
