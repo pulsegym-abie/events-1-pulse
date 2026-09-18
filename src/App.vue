@@ -444,6 +444,17 @@ function retry () {
 .intro { grid-area: intro; text-align: center; }
 .flyer-actions { display: none; }
 
+/* Centering for the intro block's flex rows/boxes lives here — before the
+   min-width: 60rem override below — so that override actually wins the
+   cascade at desktop widths. A later, unconditional rule with the same
+   specificity always beats an earlier media-query rule regardless of which
+   one is "inside" the media query, so these can't be declared again (even
+   without centering) further down the stylesheet. */
+.quick-actions { justify-content: center; }
+.host-row { justify-content: center; }
+.location-block { justify-content: center; text-align: center; }
+.lede { margin-left: auto; margin-right: auto; }
+
 @media (min-width: 60rem) {
   .hero {
     display: grid;
@@ -461,6 +472,7 @@ function retry () {
      once it sits beside the flyer image on desktop. */
   .intro { text-align: left; }
   .quick-actions, .host-row, .location-block { justify-content: flex-start; }
+  .location-block { text-align: left; }
   .lede { margin-left: 0; margin-right: 0; }
 }
 
@@ -536,7 +548,6 @@ function retry () {
 .quick-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: .7rem;
   margin: 1.2rem 0 0;
 }
@@ -576,7 +587,6 @@ function retry () {
 .host-row {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: .65rem;
   margin: 0;
 }
@@ -613,8 +623,6 @@ function retry () {
 
 .location-block {
   display: flex;
-  justify-content: center;
-  text-align: center;
   gap: .7rem;
   margin: 1.5rem 0 0;
   color: inherit;
@@ -663,7 +671,8 @@ function retry () {
   font-size: 1.08rem;
   line-height: 1.55;
   color: #d4d9da;
-  margin: 1.3rem auto 0;
+  margin-top: 1.3rem;
+  margin-bottom: 0;
   white-space: pre-line;
 }
 
