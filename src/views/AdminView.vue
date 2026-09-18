@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
@@ -14,6 +14,20 @@ const loading = ref(false)
 const loadError = ref('')
 const busy = reactive({}) // { [registrationId]: 'approving' | 'declining' }
 const actionError = ref('')
+const statusFilter = ref('pending') // pending | confirmed | waitlist | declined | all
+
+const filteredRegistrations = computed(() => {
+  if (statusFilter.value === 'all') return registrations.value
+  return registrations.value.filter(r => r.status === statusFilter.value)
+})
+
+const filterTabs = computed(() => [
+  { key: 'pending', label: 'Pending', count: stats.value?.pending_count ?? 0 },
+  { key: 'confirmed', label: 'Confirmed', count: stats.value?.approved_count ?? 0 },
+  { key: 'waitlist', label: 'Waitlist', count: stats.value?.waitlist_count ?? 0 },
+  { key: 'declined', label: 'Declined', count: stats.value?.declined_count ?? 0 },
+  { key: 'all', label: 'All', count: registrations.value.length }
+])
 
 function unlock() {
   if (!ADMIN_PASSWORD) {
@@ -172,9 +186,52 @@ function exportPdf() {
         </div>
       </div>
 
-      <h2 class="list-head">Registrants ({{ registrations.length }})</h2>
+      <div class="filter-tabs" role="tablist">
+        <button
+          v-for="f in filterTabs" :key="f.key" type="button" role="tab"
+          class="filter-tab" :class="{ active: statusFilter === f.key }"
+          @click="statusFilter = f.key"
+        >
+          {{ f.label }} <span class="filter-count">{{ f.count }}</span>
+        </button>
+      </div>
+
+      <h2 class="list-head">Registrants ({{ filteredRegistrations.length }} of {{ registrations.length }})</h2>
+
+      <!-- Mobile: compact review cards, one tap per action — the table below
+           needs horizontal scroll which is painful for approving many people
+           in a row on a phone. -->
+      <div class="card-list">
+        <div v-for="r in filteredRegistrations" :key="r.id" class="reg-card">
+          <div class="reg-card-top">
+            <div class="reg-card-who">
+              <p class="reg-name">{{ r.name }}</p>
+              <a class="reg-phone" :href="'tel:' + r.phone">{{ r.phone }}</a>
+            </div>
+            <span class="badge" :class="r.status">{{ r.status }}</span>
+          </div>
+          <p v-if="r.notes" class="reg-notes">💬 {{ r.notes }}</p>
+          <div class="reg-card-actions">
+            <template v-if="r.status === 'pending'">
+              <button type="button" class="btn-card btn-approve" :disabled="!!busy[r.id]" @click="approveReg(r.id)">
+                {{ busy[r.id] === 'approving' ? 'Confirming…' : '✓ Confirm' }}
+              </button>
+              <button type="button" class="btn-card btn-decline" :disabled="!!busy[r.id]" @click="declineReg(r.id)">
+                {{ busy[r.id] === 'declining' ? '…' : '✕ Decline' }}
+              </button>
+            </template>
+            <button v-else-if="r.status === 'confirmed'" type="button" class="btn-card btn-decline"
+                    :disabled="!!busy[r.id]" @click="declineReg(r.id)">
+              {{ busy[r.id] === 'declining' ? '…' : 'Revoke' }}
+            </button>
+            <a v-if="r.phone_normalized" class="btn-card btn-wa" :href="waLink(r)" target="_blank" rel="noopener">WA</a>
+          </div>
+        </div>
+        <p v-if="!filteredRegistrations.length && !loading" class="empty">Nothing here.</p>
+      </div>
+
       <div class="table-wrap">
-        <table v-if="registrations.length" class="reg-table">
+        <table v-if="filteredRegistrations.length" class="reg-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -188,7 +245,7 @@ function exportPdf() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in registrations" :key="r.id">
+            <tr v-for="r in filteredRegistrations" :key="r.id">
               <td>{{ r.name }}</td>
               <td>{{ r.phone }}</td>
               <td>{{ r.email || '—' }}</td>
@@ -215,7 +272,7 @@ function exportPdf() {
             </tr>
           </tbody>
         </table>
-        <p v-else-if="!loading" class="empty">No registrations yet.</p>
+        <p v-else-if="!loading" class="empty">Nothing here.</p>
       </div>
     </div>
   </div>
@@ -336,6 +393,39 @@ h1 {
   color: var(--muted);
 }
 
+.filter-tabs {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding-bottom: .2rem;
+  margin-bottom: 1.1rem;
+}
+.filter-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid #262b2c;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 600;
+  padding: .5rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filter-tab.active {
+  border-color: var(--pulse);
+  color: var(--pulse);
+  background: rgba(79, 221, 229, .1);
+}
+.filter-count {
+  font-size: .74rem;
+  opacity: .8;
+}
+
 .list-head {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
@@ -343,10 +433,81 @@ h1 {
   margin: 0 0 .9rem;
 }
 
+/* Card list: default (mobile-first) view — one tap-sized card per
+   registrant, no horizontal scrolling needed to see or act on a row.
+   The full table below is desktop-only (better for scanning/export). */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  margin-bottom: 1.6rem;
+}
+.reg-card {
+  border: 1px solid #262b2c;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: rgba(255, 255, 255, .02);
+}
+.reg-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .8rem;
+}
+.reg-card-who { min-width: 0; }
+.reg-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--paper);
+}
+.reg-phone {
+  display: block;
+  margin-top: .15rem;
+  font-size: .84rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.reg-phone:hover { color: var(--pulse); }
+.reg-notes {
+  margin: .6rem 0 0;
+  font-size: .84rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.reg-card-actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: .9rem;
+}
+.btn-card {
+  flex: 1;
+  border-radius: 10px;
+  border: 1px solid #2a3132;
+  background: none;
+  color: var(--paper);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  padding: .65rem .5rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+.btn-card:disabled { opacity: .45; cursor: default; }
+.btn-card.btn-approve { border-color: var(--pulse); background: var(--pulse); color: #000; }
+.btn-card.btn-decline { border-color: var(--danger); color: var(--danger); }
+.btn-card.btn-wa { flex: 0 0 auto; padding: .65rem .9rem; border-color: #25D366; color: #25D366; }
+
 .table-wrap {
+  display: none;
   overflow-x: auto;
   border: 1px solid #262b2c;
   border-radius: 14px;
+}
+@media (min-width: 56rem) {
+  .card-list { display: none; }
+  .table-wrap { display: block; }
 }
 .reg-table {
   width: 100%;
@@ -411,9 +572,10 @@ h1 {
 }
 
 @media print {
-  .gate, .dash-actions, .stat-grid, .actions { display: none; }
+  .gate, .dash-actions, .stat-grid, .actions, .filter-tabs, .card-list { display: none; }
   .admin { padding: 0; background: #fff; color: #000; }
   .dashboard { max-width: none; }
+  .table-wrap { display: block; }
   .reg-table { color: #000; }
   .reg-table th, .reg-table td { border-color: #ccc; }
   .table-wrap { border: 0; }
