@@ -25,8 +25,22 @@ const content = reactive({
   instagramHandle: '@pulsepowerhub.bali',
   instagramLink: 'https://instagram.com/pulsepowerhub.bali',
   lineup: ['Fitness challenge', 'Recovery & sauna', 'DJ set', 'Food & drinks', 'Prizes', 'Bazaar', 'Tarot booth', 'IV drip booth'],
-  description: 'One year of fitness, wellness and community in Berawa.\nJoin us for an evening of movement, music, food and good company.'
+  description: 'One year of fitness, wellness and community in Berawa.\nJoin us for an evening of movement, music, food and good company.',
+  dressCode: '',
+  morningSpecialTime: '',
+  morningSpecialTitle: '',
+  morningSpecialNote: '',
+  // Setiap item "Nama|/path/logo.jpg" — format sederhana ini dipakai supaya sponsor
+  // tetap bisa diedit lewat content.md tanpa perlu ubah parser (masih list biasa).
+  sponsors: []
 })
+
+const sponsorList = computed(() => content.sponsors
+  .map(entry => {
+    const [name, logo] = entry.split('|')
+    return { name: (name || '').trim(), logo: (logo || '').trim() }
+  })
+  .filter(s => s.name && s.logo))
 
 const stats = ref(null) // { quota, confirmed_count, waitlist_count }
 const spotsLeft = computed(() => {
@@ -282,6 +296,30 @@ function retry () {
       <h2 class="section-head">What's happening</h2>
       <ul class="chips">
         <li v-for="item in content.lineup" :key="item">{{ item }}</li>
+      </ul>
+    </section>
+
+    <section v-if="content.dressCode || content.morningSpecialTitle" class="info-section" aria-label="Good to know">
+      <h2 class="section-head">Good to know</h2>
+      <div class="info-grid">
+        <div v-if="content.dressCode" class="info-card">
+          <p class="info-label">👕 Dress code</p>
+          <p class="info-value">{{ content.dressCode }}</p>
+        </div>
+        <div v-if="content.morningSpecialTitle" class="info-card">
+          <p class="info-label">🧘 Morning special · {{ content.morningSpecialTime }}</p>
+          <p class="info-value">{{ content.morningSpecialTitle }}</p>
+          <p v-if="content.morningSpecialNote" class="info-note">{{ content.morningSpecialNote }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="sponsorList.length" class="sponsors-section" aria-label="Supported by">
+      <h2 class="section-head">Supported by</h2>
+      <ul class="sponsor-grid">
+        <li v-for="s in sponsorList" :key="s.name" class="sponsor-tile">
+          <img :src="s.logo" :alt="s.name" loading="lazy">
+        </li>
       </ul>
     </section>
 
@@ -841,6 +879,69 @@ function retry () {
   margin-top: 1rem;
   padding: 0;
   font-size: .92rem;
+}
+
+/* --- good to know (dress code / morning special) --- */
+.info-section { margin: 3rem 0 0; }
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .8rem;
+}
+@media (min-width: 30rem) {
+  .info-grid { grid-template-columns: 1fr 1fr; }
+}
+.info-card {
+  border: 1px solid #262b2c;
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+  background: rgba(255, 255, 255, .03);
+}
+.info-label {
+  margin: 0 0 .35rem;
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.info-value {
+  margin: 0;
+  font-size: .98rem;
+  font-weight: 600;
+  color: var(--paper);
+}
+.info-note {
+  margin: .35rem 0 0;
+  font-size: .84rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* --- supported by / sponsors --- */
+.sponsors-section { margin: 3rem 0 0; }
+.sponsor-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .8rem;
+}
+@media (min-width: 30rem) {
+  .sponsor-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.sponsor-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5.5rem;
+  border-radius: 14px;
+  background: #f5f2ee;
+  padding: .9rem;
+}
+.sponsor-tile img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* --- footer --- */

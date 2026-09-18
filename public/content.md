@@ -6,10 +6,10 @@
 brand: PULSE
 brand_sub: POWERHUB
 badge: 🌐 Public Event
-title: PULSE 1st Anniversary
+title: Turns 1 ⚡️
 cover_image: /cover.jpg
 cover_alt: PULSE Powerhub 1st Anniversary — join the celebration
-date_short: Wednesday, Sep 24
+date_short: Thursday, Sep 24
 date_full: September 24, 2026
 time: 5:00 PM – 8:00 PM
 start_iso: 2026-09-24T17:00:00+08:00
@@ -18,18 +18,28 @@ host_initials: PP
 venue: Pulse Powerhub
 address: Jl. Pemelisan Agung, Pantai Berawa, Tibubeneng, Canggu, Bali
 maps_link: https://maps.google.com/?q=Pulse+Powerhub+Berawa+Canggu
-tagline: Stronger together
+tagline: Train. Recover. Connect. Celebrate.
 instagram_handle: @pulsepowerhub.bali
 instagram_link: https://instagram.com/pulsepowerhub.bali
 lineup:
-  - Fitness challenge
-  - Recovery & sauna
-  - DJ set
-  - Food & drinks
-  - Prizes
-  - Bazaar
-  - Tarot booth
-  - IV drip booth
+  - Complimentary IV Drip Experience
+  - DJ & Music
+  - Games & Door Prizes
+  - Tarot Reading
+  - Canapés & Drinks
+  - Special Gifts & More
+dress_code: Casual Sporty / Activewear
+morning_special_time: 9 AM
+morning_special_title: Yoga Class with Nicolas Wilmy
+morning_special_note: Limited spots available. Contact PULSE to reserve your spot.
+sponsors:
+  - Alma Women Center|/sponsors/alma-women-center.jpg
+  - Nikara Spa|/sponsors/nikara-spa.jpg
+  - Bali Daylight|/sponsors/bali-daylight.jpg
+  - Yung Dii|/sponsors/yung-dii.jpg
+  - AVA DJ School|/sponsors/ava-dj-school.jpg
+  - Toko Sri Sedana|/sponsors/toko-sri-sedana.jpg
 ---
-One year of fitness, wellness and community in Berawa.
-Join us for an evening of movement, music, food and good company.
+Come celebrate our 1st Anniversary with us. Join us for an evening of good energy, music and community as we celebrate one incredible year of PULSE.
+
+Bring your friends and celebrate with the PULSE community. ⚡️
