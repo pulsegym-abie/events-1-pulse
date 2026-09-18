@@ -921,22 +921,28 @@ function retry () {
 .sponsor-grid {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  padding: .2rem .1rem 1rem;
+  display: flex;
   gap: .8rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
-@media (min-width: 30rem) {
-  .sponsor-grid { grid-template-columns: repeat(3, 1fr); }
-}
+.sponsor-grid::-webkit-scrollbar { height: 5px; }
+.sponsor-grid::-webkit-scrollbar-track { background: transparent; }
+.sponsor-grid::-webkit-scrollbar-thumb { background: #262b2c; border-radius: 999px; }
 .sponsor-tile {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 9.5rem;
   height: 5.5rem;
   border-radius: 14px;
-  background: #f5f2ee;
-  padding: .9rem;
+  border: 1px solid #262b2c;
+  background: linear-gradient(160deg, #1c2021 0%, #0a0b0c 100%);
+  padding: 1rem;
 }
 .sponsor-tile img {
   max-width: 100%;

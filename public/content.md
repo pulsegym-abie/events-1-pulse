@@ -41,7 +41,7 @@ sponsors:
   - LSV Lesva|/sponsors/lsv-lesva.png
   - Yung Dii|/sponsors/yung-dii.jpg
   - Bali Daylight|/sponsors/bali-daylight.jpg
-  - M Lounge|/sponsors/m-monogram.png
+  - Marvie Beauty|/sponsors/m-monogram.png
   - Nikara Spa|/sponsors/nikara-spa.jpg
   - Alma Women Center|/sponsors/alma-women-center.jpg
   - Sri Sedana Supplier|/sponsors/sri-sedana.png
