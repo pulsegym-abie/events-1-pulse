@@ -5,6 +5,14 @@
 
 alter table registrations add column if not exists instagram text;
 
+-- `create or replace` only overwrites a function with the EXACT SAME
+-- parameter signature. p_instagram was inserted in the middle of the
+-- argument list (not appended), so without this drop, Postgres would keep
+-- the old 6-arg version around as a separate overload alongside the new
+-- 7-arg one — two functions named submit_registration, which is exactly
+-- the "function name is not unique" error the plain GRANT below would hit.
+drop function if exists submit_registration(text, text, text, text, int, text);
+
 create or replace function submit_registration(
   p_name text,
   p_phone text,
