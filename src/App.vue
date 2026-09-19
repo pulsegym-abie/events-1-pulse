@@ -527,11 +527,18 @@ function retry () {
 .cover {
   display: block;
   width: 100%;
-  aspect-ratio: 1024 / 1536;
+  aspect-ratio: 900 / 1600;
   object-fit: cover;
   border-radius: 20px;
   margin: 0 0 1.8rem;
   box-shadow: 0 0 40px rgba(79, 221, 229, .12);
+}
+/* The 9:16 flyer is tall; on desktop it sticks beside the intro with the
+   RSVP button under it, so cap the whole block's width by viewport height
+   (image and button stay the same width) — otherwise the button falls below
+   the fold on shorter laptop screens. */
+@media (min-width: 60rem) {
+  .flyer-block { width: min(100%, calc((100vh - 10rem) * 0.5625)); margin-left: auto; margin-right: auto; }
 }
 
 /* --- intro block --- */
