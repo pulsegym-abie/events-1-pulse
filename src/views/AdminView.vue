@@ -102,14 +102,19 @@ function waLink(r) {
   return `https://wa.me/${r.phone_normalized}?text=${encodeURIComponent(msg)}`
 }
 
+function igLink(r) {
+  return `https://instagram.com/${r.instagram}`
+}
+
 function exportCsv() {
   if (!registrations.value.length) return
 
-  const headers = ['Name', 'Phone', 'Email', 'Guests', 'Status', 'Notes', 'Submitted At']
+  const headers = ['Name', 'Phone', 'Email', 'Instagram', 'Guests', 'Status', 'Notes', 'Submitted At']
   const rows = registrations.value.map((r) => [
     r.name,
     r.phone,
     r.email || '',
+    r.instagram || '',
     r.guest_count,
     r.status,
     r.notes || '',
@@ -207,6 +212,7 @@ function exportPdf() {
             <div class="reg-card-who">
               <p class="reg-name">{{ r.name }}</p>
               <a class="reg-phone" :href="'tel:' + r.phone">{{ r.phone }}</a>
+              <a v-if="r.instagram" class="reg-ig" :href="igLink(r)" target="_blank" rel="noopener">@{{ r.instagram }}</a>
             </div>
             <span class="badge" :class="r.status">{{ r.status }}</span>
           </div>
@@ -225,6 +231,7 @@ function exportPdf() {
               {{ busy[r.id] === 'declining' ? '…' : 'Revoke' }}
             </button>
             <a v-if="r.phone_normalized" class="btn-card btn-wa" :href="waLink(r)" target="_blank" rel="noopener">WA</a>
+            <a v-if="r.instagram" class="btn-card btn-ig" :href="igLink(r)" target="_blank" rel="noopener">IG</a>
           </div>
         </div>
         <p v-if="!filteredRegistrations.length && !loading" class="empty">Nothing here.</p>
@@ -237,6 +244,7 @@ function exportPdf() {
               <th>Name</th>
               <th>Phone</th>
               <th>Email</th>
+              <th>Instagram</th>
               <th>Guests</th>
               <th>Status</th>
               <th>Notes</th>
@@ -249,6 +257,10 @@ function exportPdf() {
               <td>{{ r.name }}</td>
               <td>{{ r.phone }}</td>
               <td>{{ r.email || '—' }}</td>
+              <td>
+                <a v-if="r.instagram" :href="igLink(r)" target="_blank" rel="noopener">@{{ r.instagram }}</a>
+                <span v-else>—</span>
+              </td>
               <td>{{ r.guest_count }}</td>
               <td><span class="badge" :class="r.status">{{ r.status }}</span></td>
               <td>{{ r.notes || '—' }}</td>
@@ -268,6 +280,7 @@ function exportPdf() {
                 </button>
                 <span v-else class="muted">—</span>
                 <a v-if="r.phone_normalized" class="btn-mini btn-wa" :href="waLink(r)" target="_blank" rel="noopener">WA</a>
+                <a v-if="r.instagram" class="btn-mini btn-ig" :href="igLink(r)" target="_blank" rel="noopener">IG</a>
               </td>
             </tr>
           </tbody>
@@ -469,6 +482,14 @@ h1 {
   text-decoration: none;
 }
 .reg-phone:hover { color: var(--pulse); }
+.reg-ig {
+  display: block;
+  margin-top: .1rem;
+  font-size: .84rem;
+  color: #e1306c;
+  text-decoration: none;
+}
+.reg-ig:hover { text-decoration: underline; }
 .reg-notes {
   margin: .6rem 0 0;
   font-size: .84rem;
@@ -498,6 +519,7 @@ h1 {
 .btn-card.btn-approve { border-color: var(--pulse); background: var(--pulse); color: #000; }
 .btn-card.btn-decline { border-color: var(--danger); color: var(--danger); }
 .btn-card.btn-wa { flex: 0 0 auto; padding: .65rem .9rem; border-color: #25D366; color: #25D366; }
+.btn-card.btn-ig { flex: 0 0 auto; padding: .65rem .9rem; border-color: #e1306c; color: #e1306c; }
 
 .table-wrap {
   display: none;
@@ -562,6 +584,7 @@ h1 {
 .btn-approve { border-color: var(--pulse); color: var(--pulse); }
 .btn-decline { border-color: var(--danger); color: var(--danger); }
 .btn-wa { border-color: #25D366; color: #25D366; }
+.btn-ig { border-color: #e1306c; color: #e1306c; }
 .muted { color: var(--muted); }
 
 .empty {

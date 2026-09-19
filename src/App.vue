@@ -47,6 +47,7 @@ const form = reactive({
   phoneDial: '', // country dial code, e.g. "+62" — left blank, most guests aren't Indonesian
   phone: '', // national number, without the dial code
   email: '',
+  instagram: '', // optional — lets admin quick-link to the guest's IG later
   comment: '',
   website: '' // honeypot — hidden from real visitors, see .hp-field below
 })
@@ -197,6 +198,7 @@ async function submit () {
       p_name: form.name.trim(),
       p_phone: form.phoneDial + form.phone.trim(),
       p_email: form.email.trim().toLowerCase(),
+      p_instagram: form.instagram.trim() || null,
       p_notes: form.comment.trim() || null
     })
     if (error) throw error
@@ -341,6 +343,10 @@ function retry () {
                    :aria-invalid="!!errors.email" @input="delete errors.email">
           </div>
           <p v-if="errors.email" class="err">{{ errors.email }}</p>
+
+          <div class="uline-field">
+            <input v-model="form.instagram" type="text" placeholder="Instagram username (optional)" autocapitalize="off">
+          </div>
 
           <div class="uline-field">
             <input v-model="form.comment" type="text" placeholder="+ Post a comment">
