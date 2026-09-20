@@ -930,17 +930,29 @@ function retry () {
   -webkit-overflow-scrolling: touch;
   border-radius: 14px;
   border: 1px solid #262b2c;
-  background: linear-gradient(160deg, #1c2021 0%, #0a0b0c 100%);
-  padding: 1.1rem 1rem;
+  /* same near-black as the poster's own bottom edge so the crop blends in */
+  background: linear-gradient(160deg, #0e0c0d 0%, #030305 100%);
+  padding: .8rem .6rem;
 }
 .sponsors-strip::-webkit-scrollbar { height: 5px; }
 .sponsors-strip::-webkit-scrollbar-track { background: transparent; }
 .sponsors-strip::-webkit-scrollbar-thumb { background: #262b2c; border-radius: 999px; }
+/* Two-row logo crop cut from the poster: fill the card on desktop, but never
+   shrink below a legible width on phones (the card scrolls sideways instead). */
 .sponsors-strip img {
   display: block;
-  height: 5rem;
-  width: auto;
-  max-width: none;
+  width: 100%;
+  min-width: 28rem;
+  max-width: 48rem;
+  height: auto;
+  margin: 0 auto;
+  /* feather the crop's edges into the card so no rectangle seam shows */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%),
+                      linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%),
+              linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-composite: intersect;
 }
 
 /* --- footer --- */

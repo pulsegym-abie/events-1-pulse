@@ -32,7 +32,7 @@ dress_code: Casual Sporty / Activewear
 morning_special_time: 9 AM
 morning_special_title: Yoga Class with Nicolas Wilmy
 morning_special_note: Limited spots available. Contact PULSE to reserve your spot.
-sponsors_image: /sponsors/supported-by-strip.png
+sponsors_image: /sponsors/supported-by-poster.png
 ---
 Come celebrate our 1st Anniversary with us. Join us for an evening of good energy, music and community as we celebrate one incredible year of PULSE.
 
