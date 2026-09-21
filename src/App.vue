@@ -30,8 +30,6 @@ const content = reactive({
   morningSpecialTime: '',
   morningSpecialTitle: '',
   morningSpecialNote: '',
-  morningPoster: '',
-  morningPosterAlt: 'Morning Wellness poster',
   sponsorsImage: ''
 })
 
@@ -300,14 +298,6 @@ function retry () {
           <p v-if="content.morningSpecialNote" class="info-note">{{ content.morningSpecialNote }}</p>
         </div>
       </div>
-    </section>
-
-    <section v-if="content.morningPoster" class="morning-section" aria-label="Morning Wellness">
-      <h2 class="section-head">Morning Wellness</h2>
-      <a class="morning-poster" :href="content.morningPoster" target="_blank" rel="noopener">
-        <img :src="content.morningPoster" :alt="content.morningPosterAlt" width="900" height="1600" loading="lazy">
-      </a>
-      <p class="morning-hint">Tap the poster to zoom in</p>
     </section>
 
     <section v-if="content.sponsorsImage" class="sponsors-section" aria-label="Supported by">
@@ -932,18 +922,6 @@ function retry () {
   color: var(--muted);
   line-height: 1.5;
 }
-
-/* --- morning wellness poster --- */
-.morning-section { margin: 3rem 0 0; }
-.morning-poster { display: block; max-width: 26rem; margin: 0 auto; }
-.morning-poster img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 20px;
-  box-shadow: 0 0 40px rgba(79, 221, 229, .12);
-}
-.morning-hint { margin: .8rem 0 0; text-align: center; font-size: .8rem; color: var(--muted); }
 
 /* --- supported by / sponsors --- */
 .sponsors-section { margin: 3rem 0 0; }
